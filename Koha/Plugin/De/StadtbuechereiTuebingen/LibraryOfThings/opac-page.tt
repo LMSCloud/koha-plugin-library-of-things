@@ -40,7 +40,7 @@
             [% IF thing.is_new %]
               <span class="lot-ribbon-wrapper"><span class="lot-glow">&nbsp;</span><span class="lot-ribbon">[% texts.ribbon_new | html %]</span></span>
             [% END %]
-            <img src="/cgi-bin/koha/opac-image.pl?thumbnail=1&amp;biblionumber=[% thing.biblionumber | uri %]" alt="[% thing.title | html %]">
+            <img src="[% thing.cover_url | html %]" alt="[% thing.title | html %]">
             <span class="lot-badge [% thing.available ? 'lot-available' : '' %]">
               [%- IF thing.available %][% texts.badge_available | html %][% ELSE %][% texts.badge_unavailable | html %][% END -%]
             </span>

@@ -73,7 +73,8 @@ ribbon and all texts of the page can be edited there as well; empty
 fields fall back to the defaults (30 days, German texts), so no
 translation toolchain is needed.
 
-The tile images are Koha's local cover images, so the system preferences
+The tile images are Koha's local cover images: one attached to the biblio,
+or else one attached to any of its items. The system preferences
 `LocalCoverImages` and `OPACLocalCoverImages` must be enabled; things
 without a cover show a plain tile with the title label.
 

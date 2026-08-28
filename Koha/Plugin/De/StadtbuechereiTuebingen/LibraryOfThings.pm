@@ -736,6 +736,7 @@ one item of the configured type:
     {
         biblionumber   => 123,
         title          => 'Akku-Bohrschrauber',
+        cover_url      => '/cgi-bin/koha/opac-image.pl?thumbnail=1&imagenumber=7',  # see _cover_url
         available      => 2,            # items genuinely lendable (see _item_is_available)
         is_new         => 1,            # an item was accessioned in the last $NEW_BADGE_DAYS days
         categories     => [ { code => 'WERKZEUG', description => 'Werkzeuge' } ],
@@ -776,10 +777,13 @@ sub _things {
                 available    => 0,
                 is_new       => 0,
                 categories   => [],
+                _biblio      => $item->biblio,
+                _items       => [],
             };
             $thing_by_biblionumber->{$biblionumber} = $thing;
             push @{$things}, $thing;
         }
+        push @{ $thing->{_items} }, $item;
 
         if ( _item_is_available($item) ) {
             $thing->{available}++;
@@ -806,9 +810,49 @@ sub _things {
             push @{$codes}, $category->{code};
         }
         $thing->{category_codes} = join q{ }, @{$codes};
+        $thing->{cover_url}      = _cover_url( $thing->{_biblio}, $thing->{_items} );
+        delete $thing->{_biblio};
+        delete $thing->{_items};
     }
 
     return $things;
+}
+
+=head2 _cover_url
+
+    my $url = _cover_url( $biblio, \@items );
+
+Internal. Picks the thumbnail URL for a tile: a local cover image attached
+to the biblio, else one attached to any of the thing's items (libraries
+often upload covers on the item). Falls back to
+C<opac-image.pl?biblionumber=...>, which is what the page always used
+before; Koha answers that with its placeholder image when the biblio has
+no local cover.
+
+=cut
+
+sub _cover_url {
+    my ( $biblio, $items ) = @_;
+
+    my $local_url = sub {
+        my ($imagenumber) = @_;
+        return "/cgi-bin/koha/opac-image.pl?thumbnail=1&imagenumber=$imagenumber";
+    };
+
+    if ( my $images = $biblio->cover_images ) {
+        if ( my $image = $images->next ) {
+            return $local_url->( $image->imagenumber );
+        }
+    }
+
+    for my $item ( @{ $items // [] } ) {
+        my $images = $item->cover_images or next;
+        if ( my $image = $images->next ) {
+            return $local_url->( $image->imagenumber );
+        }
+    }
+
+    return '/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=' . $biblio->biblionumber;
 }
 
 =head2 _item_is_available

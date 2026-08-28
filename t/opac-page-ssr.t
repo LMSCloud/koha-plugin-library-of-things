@@ -101,7 +101,7 @@ subtest 'install creates the OPAC page with materialized content' => sub {
 };
 
 subtest 'data changes re-render the page instantly' => sub {
-    plan tests => 24;
+    plan tests => 27;
 
     # Fixtures: an item type marking the things, two biblios with items of
     # that type (one of them twice, to prove one tile per biblio); plus a
@@ -161,6 +161,23 @@ subtest 'data changes re-render the page instantly' => sub {
     $html = content_object()->content;
     unlike( tile_for( $html, $sewing->biblionumber ), qr/lot-available/xms, 'checked-out thing shows as unavailable' );
     like( tile_for( $html, $drill->biblionumber ), qr/lot-available/xms, 'other things stay available' );
+
+    # Cover sources: no local image -> biblionumber URL (Koha's placeholder);
+    # an item-level local image is used; a biblio-level one wins over it
+    my $drill_bn = $drill->biblionumber;
+    like( tile_for( $html, $drill_bn ), qr{opac-image[.]pl[?]thumbnail=1&amp;biblionumber=$drill_bn"}xms, 'thing without a local cover falls back to the biblionumber image URL' );
+
+    my $item_image = $builder->build_object( { class => 'Koha::CoverImages', value => { biblionumber => undef, itemnumber => $sewing_item->itemnumber } } );
+    $plugin->after_item_action( { action => 'modify', item_id => $sewing_item->itemnumber } );
+    $html = content_object()->content;
+    my $item_imagenumber = $item_image->imagenumber;
+    like( tile_for( $html, $sewing->biblionumber ), qr{opac-image[.]pl[?]thumbnail=1&amp;imagenumber=$item_imagenumber"}xms, 'item-level local cover image is used' );
+
+    my $biblio_image = $builder->build_object( { class => 'Koha::CoverImages', value => { biblionumber => $sewing->biblionumber, itemnumber => undef } } );
+    $plugin->after_item_action( { action => 'modify', item_id => $sewing_item->itemnumber } );
+    $html = content_object()->content;
+    my $biblio_imagenumber = $biblio_image->imagenumber;
+    like( tile_for( $html, $sewing->biblionumber ), qr{imagenumber=$biblio_imagenumber"}xms, 'biblio-level local cover image wins over the item-level one' );
 
     # Holds: a reserved item is not available. Reserve both of the drill's
     # items (reservedate today, not suspended, so current_holds counts them)
