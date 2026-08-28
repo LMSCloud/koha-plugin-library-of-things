@@ -63,6 +63,7 @@ HTML
     badge_available    => 'Verfügbar',
     badge_unavailable  => 'Nicht verfügbar',
     ribbon_new         => 'Neu',
+    gallery_label      => 'Alle Bilder anzeigen',
     no_results         => <<'HTML',
 Ups! Hier gibt es aktuell nichts zu sehen.<br>
 Probieren Sie einen anderen Begriff oder wählen Sie einen anderen Filter.<br>
@@ -736,7 +737,9 @@ one item of the configured type:
     {
         biblionumber   => 123,
         title          => 'Akku-Bohrschrauber',
-        cover_url      => '/cgi-bin/koha/opac-image.pl?thumbnail=1&imagenumber=7',  # see _cover_url
+        cover_url      => '/cgi-bin/koha/opac-image.pl?thumbnail=1&imagenumber=7',  # undef without a local cover, see _cover_images
+        cover_count    => 2,            # all local covers of biblio and items
+        gallery_urls   => '/cgi-bin/koha/opac-image.pl?imagenumber=7 /cgi-bin/koha/opac-image.pl?imagenumber=9',  # full-size, space separated, only when cover_count > 1
         available      => 2,            # items genuinely lendable (see _item_is_available)
         is_new         => 1,            # an item was accessioned in the last $NEW_BADGE_DAYS days
         categories     => [ { code => 'WERKZEUG', description => 'Werkzeuge' } ],
@@ -810,7 +813,14 @@ sub _things {
             push @{$codes}, $category->{code};
         }
         $thing->{category_codes} = join q{ }, @{$codes};
-        $thing->{cover_url}      = _cover_url( $thing->{_biblio}, $thing->{_items} );
+        my $images = _cover_images( $thing->{_biblio}, $thing->{_items} );
+        $thing->{cover_count} = scalar @{$images};
+        $thing->{cover_url}   = @{$images}
+            ? join( q{}, '/cgi-bin/koha/opac-image.pl?thumbnail=1&imagenumber=', $images->[0]->imagenumber )
+            : undef;
+        $thing->{gallery_urls} = @{$images} > 1
+            ? join( q{ }, map { join q{}, '/cgi-bin/koha/opac-image.pl?imagenumber=', $_->imagenumber } @{$images} )
+            : undef;
         delete $thing->{_biblio};
         delete $thing->{_items};
     }
@@ -818,41 +828,43 @@ sub _things {
     return $things;
 }
 
-=head2 _cover_url
+=head2 _cover_images
 
-    my $url = _cover_url( $biblio, \@items );
+    my $images = _cover_images( $biblio, \@items );
 
-Internal. Picks the thumbnail URL for a tile: a local cover image attached
-to the biblio, else one attached to any of the thing's items (libraries
-often upload covers on the item). Falls back to
-C<opac-image.pl?biblionumber=...>, which is what the page always used
-before; Koha answers that with its placeholder image when the biblio has
-no local cover.
+Internal. Returns all local cover images of a thing as Koha::CoverImage
+objects in a deterministic order: the biblio's own images by imagenumber,
+then the items' images ordered by itemnumber and imagenumber (libraries
+often upload covers on the item). The first one is the tile image; when
+there are several, the tile gets a lightbox with all of them, so which
+image comes first only matters for the thumbnail.
+
+Returns an empty arrayref when there is no local cover at all; the template
+then renders a title-only tile. Deliberately no fallback to
+C<opac-image.pl?biblionumber=...>: for a biblio without a cover Koha
+answers that with a 1x1 placeholder GIF and a 30 minute Expires header,
+so the tile stays an empty box (the image "loaded", so the broken-image
+handling never kicks in) and covers uploaded later show up half an hour
+late.
 
 =cut
 
-sub _cover_url {
+sub _cover_images {
     my ( $biblio, $items ) = @_;
 
-    my $local_url = sub {
-        my ($imagenumber) = @_;
-        return "/cgi-bin/koha/opac-image.pl?thumbnail=1&imagenumber=$imagenumber";
+    my $images = [];
+    my $collect = sub {
+        my ($cover_images) = @_;
+        return if !$cover_images;
+        push @{$images}, $cover_images->search( {}, { order_by => 'imagenumber' } )->as_list;
     };
 
-    if ( my $images = $biblio->cover_images ) {
-        if ( my $image = $images->next ) {
-            return $local_url->( $image->imagenumber );
-        }
+    $collect->( $biblio->cover_images );
+    for my $item ( sort { $a->itemnumber <=> $b->itemnumber } @{ $items // [] } ) {
+        $collect->( $item->cover_images );
     }
 
-    for my $item ( @{ $items // [] } ) {
-        my $images = $item->cover_images or next;
-        if ( my $image = $images->next ) {
-            return $local_url->( $image->imagenumber );
-        }
-    }
-
-    return '/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=' . $biblio->biblionumber;
+    return $images;
 }
 
 =head2 _item_is_available

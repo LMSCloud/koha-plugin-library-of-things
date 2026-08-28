@@ -252,6 +252,18 @@
   display: block;
 }
 
+/* Kachel ohne Cover: Titel dauerhaft mittig anzeigen */
+#library-of-things .lot-no-cover .lot-label {
+  display: block;
+  position: static;
+  transform: none;
+  background: none;
+  box-shadow: none;
+  text-align: center;
+  font-weight: bold;
+  hyphens: auto;
+}
+
 /* --- Verfuegbarkeits-Badge --- */
 #library-of-things .lot-badge {
   position: absolute;
@@ -266,6 +278,34 @@
 }
 #library-of-things .lot-badge.lot-available {
   background: var(--lot-badge-available-bg);
+}
+
+/* --- Galerie-Knopf (unten links) bei mehreren Bildern; oeffnet die
+   Chocolat-Lightbox, siehe library-of-things.js --- */
+#library-of-things .lot-gallery {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: var(--lot-badge-font-size);
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  z-index: 2;
+}
+#library-of-things .lot-gallery:hover,
+#library-of-things .lot-gallery:focus-visible {
+  background: rgba(0, 0, 0, 0.8);
+  outline: 2px solid #fff;
+}
+/* Chocolat liegt sonst (z-index 10-16) unter der Infobox und den
+   Kacheln beim Hover */
+.chocolat-overlay {
+  z-index: 1040;
+}
+.chocolat-wrapper {
+  z-index: 1050;
 }
 
 /* --- "Neu"-Band (oben links, schraeg) --- */

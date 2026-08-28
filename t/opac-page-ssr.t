@@ -75,7 +75,7 @@ sub content_object {
 sub tile_for {
     my ( $html, $biblionumber ) = @_;
 
-    if ( $html =~ m{( <a \s+ class="lot-tile" \s+ data-biblionumber="$biblionumber" .*? </a> )}xms ) {
+    if ( $html =~ m{( <a \s+ class="lot-tile[^"]*" \s+ data-biblionumber="$biblionumber" .*? </a> )}xms ) {
         return $1;
     }
     return q{};
@@ -101,7 +101,7 @@ subtest 'install creates the OPAC page with materialized content' => sub {
 };
 
 subtest 'data changes re-render the page instantly' => sub {
-    plan tests => 27;
+    plan tests => 35;
 
     # Fixtures: an item type marking the things, two biblios with items of
     # that type (one of them twice, to prove one tile per biblio); plus a
@@ -131,7 +131,7 @@ subtest 'data changes re-render the page instantly' => sub {
     unlike( $html, qr/Aktuell\s+sind\s+keine\s+Dinge/xms, 'empty state replaced by the grid' );
     like( $html, qr/Custom\s+Intro\s+4711/xms, 'configured text override is rendered' );
 
-    my $tiles = [ $html =~ /class="lot-tile"/gxms ];
+    my $tiles = [ $html =~ /class="lot-tile[\s"]/gxms ];
     is( scalar @{$tiles}, 2, 'one tile per biblio, not per item' );
 
     unlike( $html, qr/\[%/xms, 'no TT directives in the output' );
@@ -162,22 +162,38 @@ subtest 'data changes re-render the page instantly' => sub {
     unlike( tile_for( $html, $sewing->biblionumber ), qr/lot-available/xms, 'checked-out thing shows as unavailable' );
     like( tile_for( $html, $drill->biblionumber ), qr/lot-available/xms, 'other things stay available' );
 
-    # Cover sources: no local image -> biblionumber URL (Koha's placeholder);
+    # Cover sources: no local image -> title-only tile without <img>;
     # an item-level local image is used; a biblio-level one wins over it
-    my $drill_bn = $drill->biblionumber;
-    like( tile_for( $html, $drill_bn ), qr{opac-image[.]pl[?]thumbnail=1&amp;biblionumber=$drill_bn"}xms, 'thing without a local cover falls back to the biblionumber image URL' );
+    like( tile_for( $html, $drill->biblionumber ), qr/class="lot-tile\s+lot-no-cover"/xms, 'thing without a local cover is marked as title-only tile' );
+    unlike( tile_for( $html, $drill->biblionumber ), qr/<img/xms, 'thing without a local cover requests no image' );
 
     my $item_image = $builder->build_object( { class => 'Koha::CoverImages', value => { biblionumber => undef, itemnumber => $sewing_item->itemnumber } } );
     $plugin->after_item_action( { action => 'modify', item_id => $sewing_item->itemnumber } );
     $html = content_object()->content;
     my $item_imagenumber = $item_image->imagenumber;
     like( tile_for( $html, $sewing->biblionumber ), qr{opac-image[.]pl[?]thumbnail=1&amp;imagenumber=$item_imagenumber"}xms, 'item-level local cover image is used' );
+    unlike( tile_for( $html, $sewing->biblionumber ), qr/lot-no-cover/xms, 'thing with a cover is not marked title-only' );
+    unlike( tile_for( $html, $sewing->biblionumber ), qr/lot-gallery/xms, 'a single cover gets no gallery button' );
+    unlike( $html, qr/Chocolat/xms, 'lightbox library is not loaded without galleries' );
 
     my $biblio_image = $builder->build_object( { class => 'Koha::CoverImages', value => { biblionumber => $sewing->biblionumber, itemnumber => undef } } );
     $plugin->after_item_action( { action => 'modify', item_id => $sewing_item->itemnumber } );
     $html = content_object()->content;
     my $biblio_imagenumber = $biblio_image->imagenumber;
     like( tile_for( $html, $sewing->biblionumber ), qr{imagenumber=$biblio_imagenumber"}xms, 'biblio-level local cover image wins over the item-level one' );
+    like( tile_for( $html, $sewing->biblionumber ), qr{class="lot-gallery" .*? data-lot-covers="/cgi-bin/koha/opac-image[.]pl[?]imagenumber=$biblio_imagenumber \s /cgi-bin/koha/opac-image[.]pl[?]imagenumber=$item_imagenumber"}xms, 'two covers: gallery button lists both full-size images, biblio first' );
+    like( tile_for( $html, $sewing->biblionumber ), qr{lot-gallery .*? >\s*<i [^>]*fa-camera[^>]*></i> \s* 2 \s*</span>}xms, 'gallery button shows the image count' );
+    like( $html, qr{/opac-tmpl/lib/Chocolat/js/chocolat[.]js}xms, 'lightbox library is loaded when a gallery exists' );
+
+    # Several items with covers: the item with the lowest itemnumber wins,
+    # regardless of which image was uploaded first
+    my ( $drill_lo, $drill_hi ) = sort { $a->itemnumber <=> $b->itemnumber } ( $drill_item_new, $drill_item_old );
+    my $hi_image = $builder->build_object( { class => 'Koha::CoverImages', value => { biblionumber => undef, itemnumber => $drill_hi->itemnumber } } );
+    my $lo_image = $builder->build_object( { class => 'Koha::CoverImages', value => { biblionumber => undef, itemnumber => $drill_lo->itemnumber } } );
+    $plugin->after_item_action( { action => 'modify', item_id => $drill_lo->itemnumber } );
+    $html = content_object()->content;
+    my $lo_imagenumber = $lo_image->imagenumber;
+    like( tile_for( $html, $drill->biblionumber ), qr{imagenumber=$lo_imagenumber"}xms, 'with several item covers the lowest itemnumber wins' );
 
     # Holds: a reserved item is not available. Reserve both of the drill's
     # items (reservedate today, not suspended, so current_holds counts them)

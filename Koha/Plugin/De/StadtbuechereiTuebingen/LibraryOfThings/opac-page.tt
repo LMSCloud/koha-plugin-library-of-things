@@ -34,16 +34,31 @@
       [% END %]
     </div>
 
+    [%# Lightbox fuer Dinge mit mehreren Bildern: Koha bringt Chocolat mit
+        (die Detailseite nutzt es fuer die Coverbilder). Nur laden, wenn
+        mindestens ein Ding mehr als ein Bild hat. %]
+    [% SET has_gallery = 0 %]
+    [% FOREACH thing IN things %][% IF thing.gallery_urls %][% SET has_gallery = 1 %][% LAST %][% END %][% END %]
+    [% IF has_gallery %]
+      <link rel="stylesheet" href="/opac-tmpl/lib/Chocolat/css/chocolat.css">
+      <script src="/opac-tmpl/lib/Chocolat/js/chocolat.js" defer></script>
+    [% END %]
+
     <div class="lot-grid">
         [% FOREACH thing IN things %]
-          <a class="lot-tile" data-biblionumber="[% thing.biblionumber | html %]" data-category="[% thing.category_codes | html %]" href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% thing.biblionumber | uri %]">
+          <a class="lot-tile[% IF !thing.cover_url %] lot-no-cover[% END %]" data-biblionumber="[% thing.biblionumber | html %]" data-category="[% thing.category_codes | html %]" href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% thing.biblionumber | uri %]">
             [% IF thing.is_new %]
               <span class="lot-ribbon-wrapper"><span class="lot-glow">&nbsp;</span><span class="lot-ribbon">[% texts.ribbon_new | html %]</span></span>
             [% END %]
-            <img src="[% thing.cover_url | html %]" alt="[% thing.title | html %]">
+            [% IF thing.cover_url %]
+              <img src="[% thing.cover_url | html %]" alt="[% thing.title | html %]">
+            [% END %]
             <span class="lot-badge [% thing.available ? 'lot-available' : '' %]">
               [%- IF thing.available %][% texts.badge_available | html %][% ELSE %][% texts.badge_unavailable | html %][% END -%]
             </span>
+            [% IF thing.gallery_urls %]
+              <span class="lot-gallery" role="button" tabindex="0" data-lot-covers="[% thing.gallery_urls | html %]" data-lot-title="[% thing.title | html %]" title="[% texts.gallery_label | html %]" aria-label="[% texts.gallery_label | html %] ([% thing.cover_count | html %])"><i class="fa fa-camera" aria-hidden="true"></i> [% thing.cover_count | html %]</span>
+            [% END %]
             <span class="lot-label">[% thing.title | html %]</span>
           </a>
         [% END %]

@@ -7,6 +7,7 @@
  *  - Filter-Buttons nach Kategorie (Sammlungscode)
  *  - die Keine-Treffer-Kachel
  *  - Ausblenden von Kacheln mit kaputtem Bild
+ *  - Lightbox (Chocolat, von Koha mitgeliefert) fuer Dinge mit mehreren Bildern
  *
  * Suche und Filter sind im Template mit hidden markiert und werden hier
  * erst eingeblendet, damit Nutzer ohne JavaScript keine toten Bedien-
@@ -82,6 +83,36 @@
       this.classList.add('lot-filter-active');
       activeFilter = this.getAttribute('data-filter') || '';
       applyFilters();
+    });
+  });
+
+  // Galerie-Knopf: oeffnet alle Bilder des Dings in der Chocolat-Lightbox,
+  // ohne dem Kachel-Link zu folgen. Ohne Chocolat (Skript nicht geladen)
+  // bleibt der Knopf wirkungslos und der Klick folgt dem Link.
+  Array.prototype.slice.call(root.querySelectorAll('.lot-gallery')).forEach(function (trigger) {
+    var lightbox = null;
+
+    function openGallery(event) {
+      if (typeof window.Chocolat !== 'function') {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      if (!lightbox) {
+        var title = trigger.getAttribute('data-lot-title') || '';
+        var images = (trigger.getAttribute('data-lot-covers') || '').split(' ').filter(Boolean).map(function (src) {
+          return { src: src, title: title };
+        });
+        lightbox = window.Chocolat(images, { loop: true });
+      }
+      lightbox.api.open(0);
+    }
+
+    trigger.addEventListener('click', openGallery);
+    trigger.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        openGallery(event);
+      }
     });
   });
 

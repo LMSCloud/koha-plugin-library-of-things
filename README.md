@@ -73,10 +73,15 @@ ribbon and all texts of the page can be edited there as well; empty
 fields fall back to the defaults (30 days, German texts), so no
 translation toolchain is needed.
 
-The tile images are Koha's local cover images: one attached to the biblio,
-or else one attached to any of its items. The system preferences
-`LocalCoverImages` and `OPACLocalCoverImages` must be enabled; things
-without a cover show a plain tile with the title label.
+The tile images are Koha's local cover images, attached to the biblio or
+to any of its items. The system preferences `LocalCoverImages` and
+`OPACLocalCoverImages` must be enabled. The tile shows the first image
+(biblio images first, then items by item number); when a thing has more
+than one image, a small camera button on the tile opens all of them in a
+lightbox (Chocolat, shipped with Koha), so no image has to be picked as
+"the" cover. Things without a cover get a title-only tile (no image
+request at all, so a cover uploaded later appears with the next page
+refresh instead of after Koha's 30 minute placeholder cache).
 
 **Note:** the fields "Infobox, Inhalt" and "Keine Treffer" are raw HTML
 and are output unchanged in the OPAC. Whoever may configure the plugin

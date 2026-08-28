@@ -126,6 +126,10 @@
                                 <input type="text" name="text_ribbon_new" id="text_ribbon_new" size="80" value="[% texts.ribbon_new | html %]" />
                             </li>
                             <li>
+                                <label for="text_gallery_label">Bildergalerie (Tooltip/Screenreader):</label>
+                                <input type="text" name="text_gallery_label" id="text_gallery_label" size="80" value="[% texts.gallery_label | html %]" />
+                            </li>
+                            <li>
                                 <label for="text_no_results">Keine Treffer (HTML):</label>
                                 <textarea name="text_no_results" id="text_no_results" rows="5" cols="80">[% texts.no_results | html %]</textarea>
                             </li>
