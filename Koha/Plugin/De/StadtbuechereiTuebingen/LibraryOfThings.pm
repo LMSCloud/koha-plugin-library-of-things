@@ -108,7 +108,7 @@ Readonly our $THEMES => {
     lmscloud => 'LMSCloud OPAC',
 };
 
-our $VERSION  = '1.1.0';
+our $VERSION  = '1.2.0';
 our $METADATA = {
     name        => 'Library of Things',
     author      => 'Stadtbuecherei Tuebingen',
