@@ -12,6 +12,14 @@
  *     --lot-tile-height: 220px;
  *     --lot-badge-available-bg: #006400;
  *   }
+ *
+ * Ganze Regeln (nicht nur Variablen) brauchen in OPACUserCSS das Praefix
+ * "body ", z. B. "body #library-of-things .lot-tile { ... }": dieses
+ * Stylesheet wird innerhalb der Seite und damit NACH OPACUserCSS geladen,
+ * bei gleicher Spezifitaet wuerde es sonst gewinnen.
+ *
+ * Alternativ in der Plugin-Konfiguration unter "Darstellung" ein Theme
+ * waehlen (css/themes/*.css, wird nach diesem Stylesheet eingebunden).
  */
 
 :root {

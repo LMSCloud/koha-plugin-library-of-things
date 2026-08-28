@@ -50,7 +50,7 @@ while ( my $page = $existing_pages->next ) {
     }
     $page->delete;
 }
-$plugin->store_data( { item_type => q{}, text_intro => q{}, new_badge_days => q{} } );
+$plugin->store_data( { item_type => q{}, text_intro => q{}, new_badge_days => q{}, theme => q{} } );
 
 # Returns the object carrying the page content: the page itself on the legacy
 # schema, its 'default' localization on the split schema.
@@ -82,7 +82,7 @@ sub tile_for {
 }
 
 subtest 'install creates the OPAC page with materialized content' => sub {
-    plan tests => 6;
+    plan tests => 7;
 
     ok( $plugin->install, 'install runs through' );
 
@@ -95,13 +95,14 @@ subtest 'install creates the OPAC page with materialized content' => sub {
     my $static_route = qr{/api/v1/contrib/libraryofthings/static}xms;
     like( $content_object->content, qr{$static_route/css/library-of-things[.]css[?]v=}xms, 'stylesheet is linked via the plugin static route' );
     like( $content_object->content, qr{$static_route/js/library-of-things[.]js[?]v=}xms,   'enhancement script is linked via the plugin static route' );
+    unlike( $content_object->content, qr{/css/themes/}xms, 'no theme stylesheet by default' );
 
     # No item type configured yet -> empty state
     like( $content_object->content, qr/Aktuell\s+sind\s+keine\s+Dinge/xms, 'empty state rendered before configuration' );
 };
 
 subtest 'data changes re-render the page instantly' => sub {
-    plan tests => 35;
+    plan tests => 38;
 
     # Fixtures: an item type marking the things, two biblios with items of
     # that type (one of them twice, to prove one tile per biblio); plus a
@@ -130,6 +131,19 @@ subtest 'data changes re-render the page instantly' => sub {
     like( $html, qr/Naehmaschine\s+W6\s+N\s+2800/xms,   'second thing shows up as a tile' );
     unlike( $html, qr/Aktuell\s+sind\s+keine\s+Dinge/xms, 'empty state replaced by the grid' );
     like( $html, qr/Custom\s+Intro\s+4711/xms, 'configured text override is rendered' );
+
+    # Theme: the selected stylesheet is linked after the base one; unknown
+    # values fall back to the default look
+    $plugin->store_data( { theme => 'lmscloud' } );
+    $plugin->after_item_action( { action => 'modify' } );
+    like( content_object()->content, qr{library-of-things[.]css[?]v=[^"]*" .*? /api/v1/contrib/libraryofthings/static/css/themes/lmscloud[.]css[?]v=}xms, 'configured theme stylesheet is linked after the base stylesheet' );
+    ok( exists $plugin->static_routes->{'/css/themes/lmscloud.css'}, 'theme stylesheet has a static route' );
+    $plugin->store_data( { theme => 'no-such-theme' } );
+    $plugin->after_item_action( { action => 'modify' } );
+    unlike( content_object()->content, qr{/css/themes/}xms, 'unknown theme falls back to the default look' );
+    $plugin->store_data( { theme => q{} } );
+    $plugin->after_item_action( { action => 'modify' } );
+    $html = content_object()->content;
 
     my $tiles = [ $html =~ /class="lot-tile[\s"]/gxms ];
     is( scalar @{$tiles}, 2, 'one tile per biblio, not per item' );

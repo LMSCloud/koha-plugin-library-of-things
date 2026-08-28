@@ -73,6 +73,13 @@ ribbon and all texts of the page can be edited there as well; empty
 fields fall back to the defaults (30 days, German texts), so no
 translation toolchain is needed.
 
+*Darstellung* (look) selects the stylesheet: *Standard* is the plugin's
+own look, *LMSCloud OPAC* adds `css/themes/lmscloud.css` on top of it to
+match the LMSCloud OPAC template (grey secondary filter buttons with the
+active one in the theme green, a search/filter panel, cards with the
+title always visible). Saving rebuilds the page. Further tweaks still go
+into `OPACUserCSS`, see the comment at the top of `library-of-things.css`.
+
 The tile images are Koha's local cover images, attached to the biblio or
 to any of its items. The system preferences `LocalCoverImages` and
 `OPACLocalCoverImages` must be enabled. The tile shows the first image

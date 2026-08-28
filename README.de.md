@@ -77,6 +77,14 @@ der Zeitraum für das „Neu"-Band und alle Texte der Seite anpassen; leere
 Felder fallen auf die Standardwerte zurück (30 Tage, deutsche Texte),
 eine Übersetzungs-Infrastruktur ist nicht nötig.
 
+Unter *Darstellung* wird das Stylesheet gewählt: *Standard* ist die Optik
+des Plugins, *LMSCloud OPAC* legt `css/themes/lmscloud.css` darüber und
+gleicht die Seite an die LMSCloud-OPAC-Vorlage an (graue Filter-Buttons,
+der aktive im Themen-Grün, ein Such-/Filter-Panel, Karten mit dauerhaft
+sichtbarem Titel). Beim Speichern wird die Seite neu aufgebaut. Weitere
+Anpassungen weiterhin über `OPACUserCSS`, siehe den Kommentar am Anfang
+von `library-of-things.css`.
+
 Die Kachelbilder sind Kohas lokale Coverbilder; die Systempräferenzen
 `LocalCoverImages` und `OPACLocalCoverImages` müssen aktiviert sein.
 Dinge ohne Cover zeigen eine schlichte Kachel mit dem Titel-Label.

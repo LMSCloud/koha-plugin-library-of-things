@@ -1,0 +1,263 @@
+/*
+ * Theme "LMSCloud": Optik der LMSCloud-OPAC-Standardvorlage (Farben und
+ * Radien aus dem OPAC-SCSS, .btn-secondary-Filter mit gruenem aktivem
+ * Filter, Bedienpanel, Karten mit dauerhaft sichtbarem Titel).
+ *
+ * Wird in der Plugin-Konfiguration unter "Darstellung" ausgewaehlt und
+ * dann NACH library-of-things.css eingebunden; bei gleicher Spezifitaet
+ * gewinnt deshalb dieses Stylesheet. Eigene Anpassungen weiterhin ueber
+ * OPACUserCSS auf #library-of-things (Variablen) bzw. mit dem Praefix
+ * "body #library-of-things" (Regeln), siehe library-of-things.css.
+ */
+
+#library-of-things {
+  --lot-accent: #D2D2CF;
+  --lot-button-bg: #548300;
+  --lot-button-color: #fff;
+  --lot-button-border: #3a5a00;
+
+  /* Raster ohne Rahmen: die Karten selbst tragen Rahmen und Schatten */
+  --lot-grid-border-color: transparent;
+  --lot-grid-gap: 16px;
+  --lot-grid-padding: 0;
+
+  /* Karten: ca. 4 Spalten auf dem Desktop; --lot-tile-height ist hier
+     die Hoehe des Bildbereichs, der Titel steht darunter */
+  --lot-tile-min-width: 240px;
+  --lot-tile-height: 180px;
+  --lot-tile-radius: 5px;
+  --lot-tile-bg: #fff;
+  --lot-tile-hover-shadow: 1px 2px 6px rgba(0, 0, 0, 0.35);
+  --lot-tile-hover-scale: 1;
+
+  /* Titel (dauerhaft sichtbar) */
+  --lot-label-bg: transparent;
+  --lot-label-color: #333;
+  --lot-label-shadow: none;
+
+  /* Verfuegbarkeit wie .available / .unavailable */
+  --lot-badge-color: #fff;
+  --lot-badge-bg: #990033;
+  --lot-badge-available-bg: #006600;
+  --lot-badge-font-size: 0.85em;
+
+  /* "Neu"-Band wie .btn-danger */
+  --lot-ribbon-bg: #B92020;
+  --lot-ribbon-color: #fff;
+
+  /* Infobox */
+  --lot-info-bg: #fff;
+  --lot-info-color: #333;
+
+  /* Keine Treffer */
+  --lot-no-results-bg: #F2F2EF;
+  --lot-no-results-color: #990033;
+}
+
+/* --- Kopfzeile --- */
+#library-of-things .lot-header {
+  margin-bottom: 14px;
+}
+#library-of-things .lot-intro {
+  font-size: 1em;
+  color: #555;
+}
+
+/* --- Bedienpanel: Suche oben, Filter darunter, alles linksbuendig --- */
+#library-of-things .lot-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  margin: 0 0 20px 0;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #D8D8D8;
+  border-radius: 5px;
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.2);
+}
+#library-of-things #lot-search {
+  width: auto;
+  max-width: none;
+  margin: 14px;
+  padding: 10px 14px;
+  font-size: 1em;
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+  box-shadow: none;
+}
+#library-of-things #lot-search:focus {
+  border-color: #548300;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(194, 228, 136, 0.6);
+}
+#library-of-things .lot-filter-buttons {
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid #E5E5E5;
+  background: #F8F8F8;
+  border-radius: 0 0 5px 5px;
+}
+
+/* Buttons: Filter und Infobox-Toggle als .btn-secondary (grau), nur der
+   aktive Filter als .btn-primary (gruen) */
+#library-of-things .lot-filter-btn,
+#library-of-things .lot-info summary {
+  background: #E6E6E6;
+  color: #000;
+  border: 1px solid #B3B3B3;
+  border-radius: 3px;
+  padding: 8px 16px;
+  font-size: 0.95em;
+  font-weight: 600;
+}
+#library-of-things .lot-filter-btn:hover,
+#library-of-things .lot-info summary:hover,
+#library-of-things .lot-info[open] summary {
+  background: #E0E0E0;
+  color: #000;
+  border-color: #B3B3B3;
+}
+#library-of-things .lot-filter-btn:focus-visible,
+#library-of-things .lot-info summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #CCCCCC;
+}
+#library-of-things .lot-filter-btn.lot-filter-active,
+#library-of-things .lot-filter-btn.lot-filter-active:hover {
+  background: var(--lot-button-bg);
+  color: var(--lot-button-color);
+  border-color: var(--lot-button-border);
+}
+#library-of-things .lot-filter-btn.lot-filter-active:focus-visible {
+  box-shadow: 0 0 0 2px #7fb31a;
+}
+
+/* Infobox-Panel wie .ui-tabs-panel / .newsitem */
+#library-of-things .lot-info-content {
+  border: 1px solid #D8D8D8;
+  border-radius: 5px;
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Karten: Bild oben (nicht beschnitten, feste Hoehe), darunter der
+   Titel auf immer zwei Zeilen, damit alle Karten einer Reihe gleich hoch
+   und die Bilder gleich gross sind --- */
+#library-of-things .lot-tile {
+  flex-direction: column;
+  align-items: stretch;
+  height: auto;
+  border: 1px solid #D8D8D8;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  color: var(--lot-label-color);
+}
+#library-of-things .lot-tile:hover,
+#library-of-things .lot-tile:focus-visible {
+  border-color: #B3B3B3;
+  box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.2);
+  text-decoration: none;
+}
+#library-of-things .lot-tile img {
+  flex: 0 0 auto;
+  height: var(--lot-tile-height);
+  width: 100%;
+  object-fit: contain;
+  padding: 12px;
+  background: #F7F7F5;
+  box-sizing: border-box;
+}
+#library-of-things .lot-tile:hover img {
+  box-shadow: none;
+  transform: none;
+  filter: none;
+}
+#library-of-things .lot-grid:has(.lot-tile:hover) .lot-tile:not(:hover) img {
+  filter: none;
+  opacity: 1;
+}
+#library-of-things .lot-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  position: static;
+  transform: none;
+  max-width: none;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 0;
+  border-top: 1px solid #E5E5E5;
+  font-size: 0.95em;
+  font-weight: 600;
+  line-height: 1.35;
+  min-height: calc(2 * 1.35 * 0.95em + 20px);
+  text-align: left;
+  hyphens: auto;
+}
+#library-of-things .lot-tile:hover .lot-label {
+  color: #0074AD;
+}
+
+/* Karte ohne Cover: leerer Bildbereich in Kartenhoehe statt einer auf
+   Titelhoehe zusammengefallenen Karte (sonst liegt das Badge auf dem
+   Titel); der Titel bleibt wie bei den anderen Karten unten links */
+#library-of-things .lot-no-cover::before {
+  content: "";
+  display: block;
+  flex: 0 0 auto;
+  height: var(--lot-tile-height);
+  background: #F7F7F5;
+}
+#library-of-things .lot-no-cover .lot-label {
+  position: static;
+  transform: none;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+  font-weight: 600;
+}
+#library-of-things .lot-badge {
+  top: 10px;
+  right: 10px;
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* Links in Standard-Linkfarbe */
+#library-of-things .lot-no-results a,
+#library-of-things .lot-info-content a {
+  color: #0074AD;
+}
+#library-of-things .lot-no-results a:hover,
+#library-of-things .lot-info-content a:hover {
+  color: #005580;
+}
+
+/* --- Kartengroesse stufenweise reduzieren, aber lesbar halten;
+   ueberschreibt die :root-Breakpoints des Plugins (90px auf Handys) --- */
+@media (max-width: 991px) {
+  #library-of-things {
+    --lot-tile-min-width: 210px;
+    --lot-tile-height: 180px;
+  }
+}
+@media (max-width: 767px) {
+  #library-of-things {
+    --lot-tile-min-width: 180px;
+    --lot-tile-height: 160px;
+    --lot-grid-gap: 14px;
+  }
+}
+@media (max-width: 575px) {
+  /* Zwei Spalten auf Handys */
+  #library-of-things {
+    --lot-tile-min-width: 140px;
+    --lot-tile-height: 140px;
+    --lot-grid-gap: 10px;
+  }
+  #library-of-things .lot-label {
+    padding: 8px 10px 10px;
+    font-size: 0.9em;
+  }
+}

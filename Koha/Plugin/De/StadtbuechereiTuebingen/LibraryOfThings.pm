@@ -99,6 +99,15 @@ cataloguing/circulation action that triggered it.
 
 =cut
 
+# Selectable looks of the OPAC page (plugin data "theme", see _theme).
+# "default" is the plugin's own stylesheet alone; every other key loads
+# css/themes/<key>.css on top of it (a static route per theme, see
+# static_routes). Values are the labels shown on the configure page.
+Readonly our $THEMES => {
+    default  => 'Standard',
+    lmscloud => 'LMSCloud OPAC',
+};
+
 our $VERSION  = '1.1.0';
 our $METADATA = {
     name        => 'Library of Things',
@@ -693,6 +702,7 @@ sub _render_page {
         things         => $things,
         categories     => _filter_categories($things),
         texts          => $self->_texts(),
+        lot_theme      => $self->_theme(),
         plugin_version => $VERSION,
     };
 
@@ -903,6 +913,23 @@ sub _item_is_available {
     return 1;
 }
 
+=head2 _theme
+
+    my $theme = $self->_theme();
+
+Internal. Returns the configured theme key (plugin data "theme") if it is
+one of C<$THEMES>, otherwise 'default'. Unknown or empty values therefore
+never break the page, they just render the standard look.
+
+=cut
+
+sub _theme {
+    my ($self) = @_;
+
+    my $stored = $self->retrieve_data('theme') // q{};
+    return exists $THEMES->{$stored} ? $stored : 'default';
+}
+
 =head2 _new_badge_days
 
     my $days = $self->_new_badge_days();
@@ -994,6 +1021,7 @@ from the plugin directory. The page stylesheet and the progressive
 enhancement script become available at
 
     /api/v1/contrib/libraryofthings/static/css/library-of-things.css
+    /api/v1/contrib/libraryofthings/static/css/themes/<theme>.css
     /api/v1/contrib/libraryofthings/static/js/library-of-things.js
 
 which is what the link and script tags in opac-page.tt point at (with the
@@ -1028,6 +1056,7 @@ sub static_routes {
                 },
             },
         },
+        ( map { ( "/css/themes/$_.css" => _static_css_route("libraryOfThingsStaticTheme\u$_") ) } grep { $_ ne 'default' } sort keys %{$THEMES} ),
         '/js/library-of-things.js' => {
             get => {
                 'x-mojo-to' => 'Static#get',
@@ -1045,6 +1074,39 @@ sub static_routes {
                     '200' => { description => 'File found' },
                     '404' => { description => 'File not found' },
                 },
+            },
+        },
+    };
+}
+
+=head2 _static_css_route
+
+    my $spec = _static_css_route('libraryOfThingsStaticThemeLmscloud');
+
+Internal. Route spec for one static CSS file (see L</static_routes>), with
+the cache-busting C<v> query parameter declared.
+
+=cut
+
+sub _static_css_route {
+    my ($operation_id) = @_;
+
+    return {
+        get => {
+            'x-mojo-to' => 'Static#get',
+            operationId => $operation_id,
+            tags        => ['plugins'],
+            produces    => ['text/css'],
+            parameters  => [
+                {   name        => 'v',
+                    in          => 'query',
+                    type        => 'string',
+                    description => 'Cache busting plugin version',
+                },
+            ],
+            responses => {
+                '200' => { description => 'File found' },
+                '404' => { description => 'File not found' },
             },
         },
     };
@@ -1073,11 +1135,13 @@ sub configure {
     my $op         = $cgi->param('op') // q{};
     my $saved      = 0;
     my $save_error = 0;
-    my $days_error = 0;
-    my $csrf_error = 0;
+    my $days_error  = 0;
+    my $theme_error = 0;
+    my $csrf_error  = 0;
     if ( $op eq 'cud-save' ) {
         my $item_type      = scalar $cgi->param('item_type')      // q{};
         my $new_badge_days = scalar $cgi->param('new_badge_days') // q{};
+        my $theme          = scalar $cgi->param('lot_theme')      // 'default';
 
         if ( !_csrf_token_is_valid($cgi) ) {
             $csrf_error = 1;
@@ -1088,10 +1152,14 @@ sub configure {
         elsif ( $new_badge_days ne q{} && $new_badge_days !~ /\A\d+\z/xms ) {
             $days_error = 1;
         }
+        elsif ( !exists $THEMES->{$theme} ) {
+            $theme_error = 1;
+        }
         else {
             my $values = {
                 item_type      => $item_type,
                 new_badge_days => $new_badge_days,
+                theme          => $theme,
             };
             for my $key ( sort keys %{$DEFAULT_TEXTS} ) {
                 $values->{"text_$key"} = scalar $cgi->param("text_$key") // q{};
@@ -1107,11 +1175,15 @@ sub configure {
         item_type      => $self->retrieve_data('item_type'),
         item_types     => Koha::ItemTypes->search_with_localization,
         new_badge_days => $self->_new_badge_days(),
+        # "theme" itself is Koha's TT variable (asset paths, favicon) - never override it
+        lot_theme      => $self->_theme(),
+        lot_themes     => $THEMES,
         texts          => $self->_texts(),
         csrf_token     => Koha::Token->new->generate_csrf( { session_id => scalar $cgi->cookie('CGISESSID') // q{} } ),
         saved          => $saved,
         save_error     => $save_error,
         days_error     => $days_error,
+        theme_error    => $theme_error,
         csrf_error     => $csrf_error,
     );
 

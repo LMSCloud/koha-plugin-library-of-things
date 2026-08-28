@@ -48,6 +48,10 @@
                     <div class="alert alert-warning">Der Zeitraum für das „Neu"-Band muss eine Zahl sein; nichts gespeichert.</div>
                 [% END %]
 
+                [% IF theme_error %]
+                    <div class="alert alert-warning">Unbekannte Darstellung; nichts gespeichert.</div>
+                [% END %]
+
                 [% IF csrf_error %]
                     <div class="alert alert-warning">Sitzung abgelaufen oder ungültiges Formular; bitte erneut speichern.</div>
                 [% END %]
@@ -85,6 +89,25 @@
                                 <label for="new_badge_days">„Neu"-Band, Zeitraum in Tagen:</label>
                                 <input type="number" name="new_badge_days" id="new_badge_days" min="0" value="[% new_badge_days | html %]" />
                                 <span class="hint">Exemplare mit Zugangsdatum in diesem Zeitraum bekommen das „Neu"-Band. Leer = 30 Tage, 0 schaltet das Band ab.</span>
+                            </li>
+                        </ol>
+                    </fieldset>
+
+                    <fieldset class="rows">
+                        <legend>Darstellung</legend>
+                        <ol>
+                            <li>
+                                <label for="lot_theme">Stylesheet:</label>
+                                <select name="lot_theme" id="lot_theme">
+                                    [% FOREACH key IN lot_themes.keys.sort %]
+                                        [% IF key == lot_theme %]
+                                            <option value="[% key | html %]" selected="selected">[% lot_themes.$key | html %]</option>
+                                        [% ELSE %]
+                                            <option value="[% key | html %]">[% lot_themes.$key | html %]</option>
+                                        [% END %]
+                                    [% END %]
+                                </select>
+                                <span class="hint">„Standard" ist die Optik des Plugins; „LMSCloud OPAC" gleicht die Seite an die LMSCloud-OPAC-Vorlage an. Die Seite wird beim Speichern neu aufgebaut.</span>
                             </li>
                         </ol>
                     </fieldset>

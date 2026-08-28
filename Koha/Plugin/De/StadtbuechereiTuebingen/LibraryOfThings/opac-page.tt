@@ -5,6 +5,11 @@
     texts.no_results, die bewusst HTML enthalten duerfen. %]
 <div id="library-of-things">
   <link rel="stylesheet" href="/api/v1/contrib/libraryofthings/static/css/library-of-things.css?v=[% plugin_version | uri %]">
+  [%# Optionales Theme (Plugin-Konfiguration, "Darstellung"); liegt nach
+      dem Basis-Stylesheet und gewinnt deshalb bei gleicher Spezifitaet. %]
+  [% IF lot_theme && lot_theme != 'default' %]
+    <link rel="stylesheet" href="/api/v1/contrib/libraryofthings/static/css/themes/[% lot_theme | uri %].css?v=[% plugin_version | uri %]">
+  [% END %]
 
   [%# Kopfzeile: Intro links, Infobox rechts als natives Aufklapp-Element
       (funktioniert ohne JavaScript). Der geoeffnete Inhalt legt sich als
