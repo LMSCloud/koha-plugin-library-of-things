@@ -80,6 +80,10 @@ active one in the theme green, a search/filter panel, cards with the
 title always visible). Saving rebuilds the page. Further tweaks still go
 into `OPACUserCSS`, see the comment at the top of `library-of-things.css`.
 
+The checkbox *Infobox beim Laden aufgeklappt* (default: on) decides whether
+the info box (lending conditions, opening hours) is expanded when the
+page loads or only opens on click.
+
 The tile images are Koha's local cover images, attached to the biblio or
 to any of its items. The system preferences `LocalCoverImages` and
 `OPACLocalCoverImages` must be enabled. The tile shows the first image

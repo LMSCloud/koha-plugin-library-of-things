@@ -50,7 +50,7 @@ while ( my $page = $existing_pages->next ) {
     }
     $page->delete;
 }
-$plugin->store_data( { item_type => q{}, text_intro => q{}, new_badge_days => q{}, theme => q{} } );
+$plugin->store_data( { item_type => q{}, text_intro => q{}, new_badge_days => q{}, theme => q{}, info_open => q{} } );
 
 # Returns the object carrying the page content: the page itself on the legacy
 # schema, its 'default' localization on the split schema.
@@ -102,7 +102,7 @@ subtest 'install creates the OPAC page with materialized content' => sub {
 };
 
 subtest 'data changes re-render the page instantly' => sub {
-    plan tests => 38;
+    plan tests => 41;
 
     # Fixtures: an item type marking the things, two biblios with items of
     # that type (one of them twice, to prove one tile per biblio); plus a
@@ -144,6 +144,15 @@ subtest 'data changes re-render the page instantly' => sub {
     $plugin->store_data( { theme => q{} } );
     $plugin->after_item_action( { action => 'modify' } );
     $html = content_object()->content;
+
+    # Info box: expanded unless info_open is '0'; empty falls back to expanded
+    like( $html, qr{<details \s+ class="lot-info" \s+ open>}xms, 'info box is expanded by default' );
+    $plugin->store_data( { info_open => '0' } );
+    $plugin->after_item_action( { action => 'modify' } );
+    like( content_object()->content, qr{<details \s+ class="lot-info">}xms, 'info_open 0 renders the info box collapsed' );
+    $plugin->store_data( { info_open => q{} } );
+    $plugin->after_item_action( { action => 'modify' } );
+    like( content_object()->content, qr{<details \s+ class="lot-info" \s+ open>}xms, 'empty info_open falls back to expanded' );
 
     my $tiles = [ $html =~ /class="lot-tile[\s"]/gxms ];
     is( scalar @{$tiles}, 2, 'one tile per biblio, not per item' );

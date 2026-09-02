@@ -85,6 +85,10 @@ sichtbarem Titel). Beim Speichern wird die Seite neu aufgebaut. Weitere
 Anpassungen weiterhin über `OPACUserCSS`, siehe den Kommentar am Anfang
 von `library-of-things.css`.
 
+Die Option *Infobox beim Laden aufgeklappt* (Standard: an) legt fest, ob
+die Infobox (Ausleihkonditionen, Öffnungszeiten) beim Laden der Seite
+aufgeklappt ist oder erst per Klick öffnet.
+
 Die Kachelbilder sind Kohas lokale Coverbilder; die Systempräferenzen
 `LocalCoverImages` und `OPACLocalCoverImages` müssen aktiviert sein.
 Dinge ohne Cover zeigen eine schlichte Kachel mit dem Titel-Label.

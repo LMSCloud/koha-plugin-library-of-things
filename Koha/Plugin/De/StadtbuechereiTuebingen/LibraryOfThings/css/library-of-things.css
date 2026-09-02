@@ -93,10 +93,15 @@
 
 /* --- Infobox: der Knopf oeffnet ein Dropdown-Panel, das ueber der Seite
    liegt (kein Layout-Shift). Knopf im Stil der Filter-Buttons (gruen,
-   geoeffnet rot). Natives details/summary, funktioniert ohne JavaScript. --- */
+   geoeffnet rot). Natives details/summary, funktioniert ohne JavaScript.
+   Das details-Element fuellt den Rest seiner Zeile, der Knopf steht an
+   dessen rechtem Ende: So haengt das rechtsbuendige Panel immer am
+   rechten Rand der Kopfzeile, ob die Zeile umbricht oder nicht, und
+   kann nicht aus dem Fenster ragen. --- */
 #library-of-things .lot-info {
   position: relative;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  text-align: right;
 }
 #library-of-things .lot-info summary {
   display: inline-block;
@@ -128,7 +133,8 @@
   top: calc(100% + 8px);
   right: 0;
   z-index: 50;
-  width: min(var(--lot-info-width), 90vw);
+  box-sizing: border-box;
+  width: min(var(--lot-info-width), 100%);
   background: var(--lot-info-bg);
   color: var(--lot-info-color);
   border-left: 4px solid var(--lot-accent);

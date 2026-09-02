@@ -703,6 +703,7 @@ sub _render_page {
         categories     => _filter_categories($things),
         texts          => $self->_texts(),
         lot_theme      => $self->_theme(),
+        lot_info_open  => $self->_info_open(),
         plugin_version => $VERSION,
     };
 
@@ -930,6 +931,24 @@ sub _theme {
     return exists $THEMES->{$stored} ? $stored : 'default';
 }
 
+=head2 _info_open
+
+    if ( $self->_info_open() ) { ... }
+
+Internal. Returns true if the info box (lending conditions, opening hours)
+should be expanded when the page loads. Plugin data "info_open": '0'
+means collapsed, everything else (including "not configured yet") means
+expanded, the plugin's original behaviour.
+
+=cut
+
+sub _info_open {
+    my ($self) = @_;
+
+    my $stored = $self->retrieve_data('info_open') // q{};
+    return $stored eq '0' ? 0 : 1;
+}
+
 =head2 _new_badge_days
 
     my $days = $self->_new_badge_days();
@@ -1118,7 +1137,8 @@ sub _static_css_route {
 
 Koha plugin hook for the configuration form: the item type that marks the
 things of the Library of Things, the timeframe for the "Neu" ribbon (see
-L</_new_badge_days>) and all texts of the OPAC page (see
+L</_new_badge_days>), the look (see L</_theme>), whether the info box
+starts expanded (see L</_info_open>) and all texts of the OPAC page (see
 C<$DEFAULT_TEXTS>; empty fields fall back to the German defaults). Saving
 (POST, op 'cud-save') requires a valid CSRF token (see
 L</_csrf_token_is_valid>), validates item type and timeframe, stores
@@ -1142,6 +1162,8 @@ sub configure {
         my $item_type      = scalar $cgi->param('item_type')      // q{};
         my $new_badge_days = scalar $cgi->param('new_badge_days') // q{};
         my $theme          = scalar $cgi->param('lot_theme')      // 'default';
+        # checkbox: absent when unchecked, so always store an explicit value
+        my $info_open      = scalar $cgi->param('info_open') ? '1' : '0';
 
         if ( !_csrf_token_is_valid($cgi) ) {
             $csrf_error = 1;
@@ -1160,6 +1182,7 @@ sub configure {
                 item_type      => $item_type,
                 new_badge_days => $new_badge_days,
                 theme          => $theme,
+                info_open      => $info_open,
             };
             for my $key ( sort keys %{$DEFAULT_TEXTS} ) {
                 $values->{"text_$key"} = scalar $cgi->param("text_$key") // q{};
@@ -1178,6 +1201,7 @@ sub configure {
         # "theme" itself is Koha's TT variable (asset paths, favicon) - never override it
         lot_theme      => $self->_theme(),
         lot_themes     => $THEMES,
+        lot_info_open  => $self->_info_open(),
         texts          => $self->_texts(),
         csrf_token     => Koha::Token->new->generate_csrf( { session_id => scalar $cgi->cookie('CGISESSID') // q{} } ),
         saved          => $saved,

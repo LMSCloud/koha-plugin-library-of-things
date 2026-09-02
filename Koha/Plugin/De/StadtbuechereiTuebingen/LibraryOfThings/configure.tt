@@ -109,6 +109,15 @@
                                 </select>
                                 <span class="hint">„Standard" ist die Optik des Plugins; „LMSCloud OPAC" gleicht die Seite an die LMSCloud-OPAC-Vorlage an. Die Seite wird beim Speichern neu aufgebaut.</span>
                             </li>
+                            <li>
+                                <label for="info_open">Infobox beim Laden aufgeklappt:</label>
+                                [% IF lot_info_open %]
+                                    <input type="checkbox" name="info_open" id="info_open" value="1" checked="checked" />
+                                [% ELSE %]
+                                    <input type="checkbox" name="info_open" id="info_open" value="1" />
+                                [% END %]
+                                <span class="hint">Aufgeklappt zeigt die Seite Ausleihkonditionen und Öffnungszeiten sofort; zugeklappt öffnet sie sich erst per Klick auf den Knopf.</span>
+                            </li>
                         </ol>
                     </fieldset>
 

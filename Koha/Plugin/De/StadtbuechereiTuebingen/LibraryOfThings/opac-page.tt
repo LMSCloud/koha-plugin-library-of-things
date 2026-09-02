@@ -13,10 +13,12 @@
 
   [%# Kopfzeile: Intro links, Infobox rechts als natives Aufklapp-Element
       (funktioniert ohne JavaScript). Der geoeffnete Inhalt legt sich als
-      Dropdown ueber die Seite, nichts verschiebt sich. %]
+      Dropdown ueber die Seite, nichts verschiebt sich. Ob die Infobox
+      beim Laden aufgeklappt ist, steuert die Plugin-Konfiguration
+      ("Darstellung"). %]
   <div class="lot-header">
     <p class="lot-intro">[% texts.intro | html %]</p>
-    <details class="lot-info" open>
+    <details class="lot-info"[% IF lot_info_open %] open[% END %]>
       <summary>[% texts.info_label | html %]</summary>
       <div class="lot-info-content">
         [% texts.info_content %]

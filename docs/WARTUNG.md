@@ -21,7 +21,8 @@ Nicht im Code: Alle Texte der Seite stehen auf der Konfigurationsseite des
 Plugins; leere Felder fallen auf die Standardtexte zurück. Die
 Standardtexte selbst stehen im Modul in `$DEFAULT_TEXTS`. Auch der
 Zeitraum für das „Neu"-Band ist dort einstellbar (leer = 30 Tage,
-0 schaltet es ab).
+0 schaltet es ab) sowie unter „Darstellung" das Stylesheet und ob die
+Infobox beim Laden aufgeklappt ist.
 
 ## Farben und Maße ändern
 
